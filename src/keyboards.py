@@ -4,9 +4,9 @@ def create_reply_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🎰 КРУТИТЬ СЛОТЫ (10 баллов)")],
-            [KeyboardButton(text="🎁 Ежедневный бонус"), KeyboardButton(text="⚡ Улучшить скорость")],
-            [KeyboardButton(text="💰 Улучшить множитель"), KeyboardButton(text="📈 Статистика")],
-            [KeyboardButton(text="📋 Меню")]
+            [KeyboardButton(text="💰 Улучшить множитель"), KeyboardButton(text="⚡ Улучшить скорость")],
+            [KeyboardButton(text="🎁 Ежедневный бонус"), KeyboardButton(text="📈 Статистика")],
+            [KeyboardButton(text="👥 Реферальная система"), KeyboardButton(text="📋 Меню")]
         ],
         resize_keyboard=True
     )
@@ -23,4 +23,12 @@ def create_cancel_keyboard():
         keyboard=[[KeyboardButton(text="❌ Отмена")]],
         resize_keyboard=True,
         one_time_keyboard=True
+    )
+
+def create_referral_keyboard(referral_code):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📋 Скопировать ссылку", callback_data=f"copy_ref_{referral_code}")],
+            [InlineKeyboardButton(text="👥 Мои рефералы", callback_data="my_refs")]
+        ]
     )
