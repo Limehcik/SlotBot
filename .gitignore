@@ -1,0 +1,16 @@
+dist/
+
+venv/
+.venv/
+env/
+ENV/
+.env
+
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+*.db
+*.log
+user_data.json
