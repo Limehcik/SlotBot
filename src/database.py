@@ -107,3 +107,11 @@ def find_user_by_username(username: str) -> str | None:
     row = cursor.fetchone()
     conn.close()
     return row[0] if row else None
+
+def get_all_admins() -> list:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id FROM users WHERE status = 'admin'")
+    rows = cursor.fetchall()
+    conn.close()
+    return [row[0] for row in rows]

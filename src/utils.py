@@ -1,5 +1,9 @@
+from functools import wraps
 import time
 from datetime import datetime, date
+from aiogram import types
+
+from database import get_user
 
 def give_daily_bonus(user_id, user_data_dict):
     today = date.today().isoformat()
@@ -62,3 +66,17 @@ def calculate_referral_bonus(win_amount, referrer_id, referral_date_str):
     if is_within_referral_period(referral_date_str):
         return max(1, int(win_amount * 0.1))
     return 0
+
+def admin_only(func):
+    @wraps(func)
+    async def wrapper(message: types.Message, *args, **kwargs):
+        user_id = str(message.from_user.id)
+        admin_data = get_user(user_id)
+        
+        if admin_data.get("status") != "admin":
+            await message.answer("❌ Недостаточно прав!")
+            return
+            
+        return await func(message, *args, **kwargs)
+        
+    return wrapper
