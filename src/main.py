@@ -18,7 +18,6 @@ from handlers.referral_handlers import show_referral_info, handle_referral_callb
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Безопасно забираем токен. Если файла .env нет или переменная пустая, вылетит понятная ошибка
 TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
     raise ValueError("❌ Токен бота не найден! Проверьте файл .env")
@@ -26,7 +25,6 @@ if not TOKEN:
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Инициализируем базу данных SQLite
 init_db()
 
 admin_commands = [

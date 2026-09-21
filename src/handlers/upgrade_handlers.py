@@ -57,7 +57,7 @@ async def buy_upgrade(callback: types.CallbackQuery):
     
     if upgrade_type == "speed":
         updates["upgrade_level"] = user_data.get("upgrade_level", 0) + 1
-        updates["upgrade_cost"] = int(cost * 1.8)
+        updates["upgrade_cost"] = int(cost * 1.5)
         new_cooldown = 10 - (updates["upgrade_level"] * 0.25)
         
         update_user(user_id, updates)
@@ -70,7 +70,7 @@ async def buy_upgrade(callback: types.CallbackQuery):
         )
     elif upgrade_type == "multiplier":
         updates["multiplier_level"] = user_data.get("multiplier_level", 0) + 1
-        updates["multiplier_cost"] = int(cost * 2.0)
+        updates["multiplier_cost"] = int(cost * 1.6)
         new_multiplier = 1 + (updates["multiplier_level"] * 0.1)
         
         update_user(user_id, updates)
