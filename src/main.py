@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from database import get_all_admins, init_db
-from handlers.user_handlers import cmd_start, spin_slots, daily_bonus_handler, show_stats, show_menu
+from handlers.user_handlers import change_bet, cmd_start, spin_slots, daily_bonus_handler, show_stats, show_menu, show_slots_menu
 from handlers.upgrade_handlers import upgrade_speed, upgrade_multiplier, buy_upgrade
 from handlers.admin_handlers import ban_user, ping_command, unban_user, give_points, take_points, message_command, process_broadcast_message, BroadcastState
 from handlers.referral_handlers import show_referral_info, handle_referral_callback
@@ -38,13 +38,17 @@ admin_commands = [
 
 async def register_comand():
     dp.message.register(cmd_start, Command("start"))
-    dp.message.register(spin_slots, F.text == "🎰 КРУТИТЬ СЛОТЫ (10 баллов)")
+    dp.message.register(show_slots_menu, F.text == "🎰 Слоты")
     dp.message.register(daily_bonus_handler, F.text == "🎁 Ежедневный бонус")
     dp.message.register(upgrade_speed, F.text == "⚡ Улучшить скорость")
     dp.message.register(upgrade_multiplier, F.text == "💰 Улучшить множитель")
     dp.message.register(show_stats, F.text == "📈 Статистика")
     dp.message.register(show_referral_info, F.text == "👥 Реферальная система")
     dp.message.register(show_menu, F.text == "📋 Меню")
+
+    dp.message.register(spin_slots, F.text.startswith("🎰 КРУТИТЬ"))
+    dp.message.register(change_bet, F.text.in_({"➕ 10", "➖ 10", "💰 ALL-IN"}))
+    dp.message.register(show_menu, F.text == "🔙 Назад в меню")
 
     dp.message.register(ping_command, Command("ping"))
     dp.message.register(ban_user, Command("ban"))

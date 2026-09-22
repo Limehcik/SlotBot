@@ -5,7 +5,7 @@ import time
 from datetime import date, datetime
 
 from database import get_user, update_user, find_user_by_referral_code
-from keyboards import create_reply_keyboard
+from keyboards import create_reply_keyboard, create_slots_keyboard
 from utils import give_daily_bonus, can_spin, get_remaining_cooldown, calculate_win, get_win_text, calculate_referral_bonus
 
 async def cmd_start(message: types.Message):
@@ -171,3 +171,36 @@ async def show_menu(message: types.Message):
         f"📈 Множитель выигрыша: x{multiplier:.1f}",
         parse_mode="Markdown"
     )
+
+async def show_slots_menu(message: types.Message):
+    user_id = message.from_user.id
+    user_data = get_user(user_id)
+    current_bet = user_data.get("current_bet", 10)
+    balance = user_data.get("balance", 0)
+    
+    await message.answer(
+        f"🎰 **Режим игры в Слоты**\n\n"
+        f"💰 Ваш баланс: `{balance}` баллов\n"
+        f"🎯 Текущая ставка: `{current_bet}` баллов\n\n"
+        f"Регулируйте ставку кнопками ниже и крутите!",
+        reply_markup=create_slots_keyboard(current_bet),
+        parse_mode="Markdown"
+    )
+
+async def change_bet(message: types.Message):
+    user_id = message.from_user.id
+    user_data = get_user(user_id)
+    current_bet = user_data.get("current_bet", 10)
+    balance = user_data.get("balance", 0)
+
+    if message.text == "➕ 10":
+        new_bet = current_bet + 10
+        if new_bet > balance and balance > 0:
+            new_bet = balance  # Не даем поставить больше баланса
+    elif message.text == "➖ 10":
+        new_bet = max(10, current_bet - 10)  # Минимальная ставка 10
+    elif message.text == "💰 ALL-IN":
+        new_bet = max(10, balance)
+
+    # Сохраняем новую ставку в БД
+    update_user(user_id, {"current_bet": new_bet})
