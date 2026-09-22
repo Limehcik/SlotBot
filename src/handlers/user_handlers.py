@@ -6,7 +6,7 @@ from datetime import date, datetime
 
 from database import get_user, update_user, find_user_by_referral_code
 from keyboards import create_reply_keyboard, create_slots_keyboard
-from utils import give_daily_bonus, can_spin, get_remaining_cooldown, calculate_win, get_win_text, calculate_referral_bonus
+from utils import give_daily_bonus, can_spin, get_remaining_cooldown, calculate_multiplier, get_win_text, calculate_referral_bonus
 
 async def cmd_start(message: types.Message):
     user_id = str(message.from_user.id)
@@ -74,13 +74,13 @@ async def spin_slots(message: types.Message):
         await message.answer(f"⏳ Подождите еще {rem:.1f} сек перед следующей прокруткой!")
         return
         
-    if user_data["balance"] < 10:
-        await message.answer("❌ Недостаточно баллов для прокрутки! Нужно минимум 10 баллов.")
+    if user_data["balance"] < user_data.get("current_bet", 10):
+        await message.answer("❌ Недостаточно баллов для прокрутки! Уменьшите ставку.")
         return
         
     # Списываем ставку
     update_user(user_id, {
-        "balance": user_data["balance"] - 10,
+        "balance": user_data["balance"] - user_data.get("current_bet", 10),
         "last_spin": time.time(),
         "total_spins": user_data.get("total_spins", 0) + 1
     })
@@ -92,7 +92,15 @@ async def spin_slots(message: types.Message):
     
     # Свежие данные после списания
     user_data = get_user(user_id)
-    win_amount = calculate_win(dice_value, user_data.get("multiplier_level", 0))
+
+    combo_mult = calculate_multiplier(dice_value)
+    
+    # 2. Учитываем прокачку пользователя (level 1 = +10% к выигрышу и т.д.)
+    user_mult_level = user_data.get("multiplier_level", 0)
+    perk_mult = 1.0 + (user_mult_level * 0.1)
+
+    # 3. Итоговый выигрыш = ставка * комбинация * прокачка
+    win_amount = int(user_data.get("current_bet", 10) * combo_mult * perk_mult)
     
     user_updates = {}
     if win_amount > 0:

@@ -30,7 +30,7 @@ def get_remaining_cooldown(user_data):
     remaining = cooldown - (current_time - last_spin)
     return max(0, remaining)
 
-def calculate_win(dice_value: int, multiplier_level: int = 0) -> int:
+def calculate_multiplier(dice_value: int, multiplier_level: int = 0) -> int:
     """
     Рассчитывает выигрыш для Telegram Slot Machine (dice_value от 1 до 64).
     
@@ -51,30 +51,21 @@ def calculate_win(dice_value: int, multiplier_level: int = 0) -> int:
 
     reels = (left, center, right)
 
-    # 1. Три семерки (777) — dice_value = 64
+    # 1. Три семерки (777) — x300
     if reels == (3, 3, 3):
-        base_win = 3000
+        return 300.0
 
-    # 2. Три одинаковых обычных символа (BAR, Вишня, Лимон)
+    # 2. Три одинаковых обычных символа (BAR, Вишня, Лимон) — x50
     elif left == center == right:
-        base_win = 500
+        return 50.0
 
-    # 3. Две семерки (7-7-X, 7-X-7, X-7-7)
+    # 3. Две семерки (7-7-X, 7-X-7, X-7-7) — x15
     elif reels.count(3) == 2:
-        base_win = 150
+        return 15.0
 
-    # 4. Две пары / пара любых обычных символов (два одинаковых символа)
+    # 4. Две пары / пара любых обычных символов — x5
     elif left == center or left == right or center == right:
-        base_win = 50
-
-    # 5. Проигрыш (все три символа разные)
-    else:
-        base_win = 0
-
-    # Расчет множителя
-    if base_win > 0:
-        multiplier = 1.0 + (multiplier_level * 0.1)
-        return int(base_win * multiplier)
+        return 5.0
 
     return 0
 
