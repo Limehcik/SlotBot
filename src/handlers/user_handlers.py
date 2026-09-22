@@ -177,6 +177,7 @@ async def show_menu(message: types.Message):
         f"💎 Баланс: {user_data['balance']} баллов\n\n"
         f"⏱️ Кулдаун крутки: {cooldown:.2f} сек\n"
         f"📈 Множитель выигрыша: x{multiplier:.1f}",
+        reply_markup=create_reply_keyboard(),
         parse_mode="Markdown"
     )
 
