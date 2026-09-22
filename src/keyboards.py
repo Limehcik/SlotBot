@@ -33,17 +33,31 @@ def create_referral_keyboard(referral_code) -> InlineKeyboardMarkup:
         ]
     )
 
-def create_slots_keyboard(current_bet: int) -> ReplyKeyboardMarkup:
+def create_slots_keyboard(current_bet: int, balance: int) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="➖ 10"),
-                KeyboardButton(text=f"🎰 КРУТИТЬ ({current_bet})"),
-                KeyboardButton(text="➕ 10")
+                KeyboardButton(text="-1k"),
+                KeyboardButton(text="-100"),
+                KeyboardButton(text="+100"),
+                KeyboardButton(text="+1k")
             ],
             [
-                KeyboardButton(text="💰 ALL-IN"),
-                KeyboardButton(text="🔙 Назад в меню")
+                KeyboardButton(text="-50k"),
+                KeyboardButton(text="-1M"),
+                KeyboardButton(text="+1M"),
+                KeyboardButton(text="+50k")
+            ],
+            [
+                KeyboardButton(text="MIN(10)"),
+                KeyboardButton(text=f"1/2 ({balance // 2})"),
+                KeyboardButton(text=f"MAX({balance})")
+            ],
+            [
+                KeyboardButton(text=f"🎰 КРУТИТЬ ({current_bet})")
+            ],
+            [
+                KeyboardButton(text="📋 Меню")
             ]
         ],
         resize_keyboard=True

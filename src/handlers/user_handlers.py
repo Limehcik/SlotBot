@@ -192,30 +192,40 @@ async def show_slots_menu(message: types.Message):
         f"💰 Ваш баланс: `{balance}` баллов\n"
         f"🎯 Текущая ставка: `{current_bet}` баллов\n\n"
         f"Регулируйте ставку кнопками ниже и крутите!",
-        reply_markup=create_slots_keyboard(current_bet),
+        reply_markup=create_slots_keyboard(current_bet, balance),
         parse_mode="Markdown"
     )
 
-async def change_bet(message: types.Message):
-    user_id = message.from_user.id
+async def process_bet_but(message: types.Message):
+    user_id = str(message.from_user.id)
     user_data = get_user(user_id)
-    current_bet = user_data.get("current_bet", 10)
+    
     balance = user_data.get("balance", 0)
+    current_bet = user_data.get("current_bet", 10)
+    text = message.text
 
-    if message.text == "➕ 10":
-        new_bet = current_bet + 10
-        if new_bet > balance and balance > 0:
-            new_bet = balance  # Не даем поставить больше баланса
-    elif message.text == "➖ 10":
-        new_bet = max(10, current_bet - 10)  # Минимальная ставка 10
-    elif message.text == "💰 ALL-IN":
-        new_bet = max(10, balance)
+    # Логика изменения ставки
+    if text == "-50k": new_bet = current_bet - 50000
+    elif text == "-1k": new_bet = current_bet - 1000
+    elif text == "-100": new_bet = current_bet - 100
+    elif text == "+100": new_bet = current_bet + 100
+    elif text == "+1k": new_bet = current_bet + 1000
+    elif text == "+50k": new_bet = current_bet + 50000
+    elif text == "-1M": new_bet = current_bet - 1000000
+    elif text == "+1M": new_bet = current_bet + 1000000
+    elif text == "MIN (10)": new_bet = 10
+    elif text == "1/2 Баланса": new_bet = max(10, balance // 2)
+    elif text == "MAX (ALL-IN)": new_bet = max(10, balance)
+    else: new_bet = current_bet
 
-    # Сохраняем новую ставку в БД
+    # Ограничения (от 10 до текущего баланса)
+    new_bet = max(10, min(new_bet, balance if balance >= 10 else 10))
+
     update_user(user_id, {"current_bet": new_bet})
 
+    # Переотправляем клавиатуру с обновленной суммой на кнопке "Крутить"
     await message.answer(
-        f"🎯 Ставка изменена на **{new_bet}**!",
-        reply_markup=create_slots_keyboard(new_bet),
+        f"Ваша ставка изменена на: **{new_bet:,}** баллов.",
+        reply_markup=create_slots_keyboard(new_bet, balance),
         parse_mode="Markdown"
     )
