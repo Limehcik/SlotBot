@@ -214,8 +214,8 @@ async def process_bet_but(message: types.Message):
     elif text == "-1M": new_bet = current_bet - 1000000
     elif text == "+1M": new_bet = current_bet + 1000000
     elif text == "MIN (10)": new_bet = 10
-    elif text == "1/2 Баланса": new_bet = max(10, balance // 2)
-    elif text == "MAX (ALL-IN)": new_bet = max(10, balance)
+    elif text == f"1/2 ({balance // 2})": new_bet = max(10, balance // 2)
+    elif text == f"MAX({balance})": new_bet = max(10, balance)
     else: new_bet = current_bet
 
     # Ограничения (от 10 до текущего баланса)
