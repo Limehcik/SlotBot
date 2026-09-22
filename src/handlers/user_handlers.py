@@ -213,3 +213,9 @@ async def change_bet(message: types.Message):
 
     # Сохраняем новую ставку в БД
     update_user(user_id, {"current_bet": new_bet})
+
+    await message.answer(
+        f"🎯 Ставка изменена на **{new_bet}**!",
+        reply_markup=create_slots_keyboard(new_bet),
+        parse_mode="Markdown"
+    )
