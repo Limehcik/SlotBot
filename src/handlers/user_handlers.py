@@ -121,8 +121,8 @@ async def spin_slots(message: types.Message):
             try:
                 await message.bot.send_message(ref_id, f"👥 Реферальный бонус! Вы получили {ref_bonus} баллов от игры вашего друга (@{user_data['username']})!")
             except Exception: pass
-            
-        await message.answer(get_win_text(win_amount, get_user(user_id)["balance"]), reply_markup=create_slots_keyboard(current_bet, user_data['balance']))
+
+        await message.answer(get_win_text(win_amount, user_updates["balance"]), reply_markup=create_slots_keyboard(current_bet, user_updates["balance"]))
     else:
         await message.answer(f"😢 Вы ничего не выиграли.\n💎 Остаток баланса: {user_data['balance']} баллов.", reply_markup=create_slots_keyboard(current_bet, user_data['balance']),)
 
