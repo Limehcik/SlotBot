@@ -47,7 +47,7 @@ async def register_comand():
     dp.message.register(show_menu, F.text == "📋 Меню")
 
     dp.message.register(spin_slots, F.text.startswith("🎰 КРУТИТЬ"))
-    dp.message.register(process_bet_but, F.text.in_({"-1k", "-100", "+100", "+1k", "-50k", "-1M", "+1M", "+50k", "MIN (10)"}))
+    dp.message.register(process_bet_but, F.text.in_({"-1k", "-100", "+100", "+1k", "-50k", "-1M", "+1M", "+50k", "MIN(10)"}))
     dp.message.register(process_bet_but, F.text.startswith("1/2 (") | F.text.startswith("MAX("))
     dp.message.register(show_menu, F.text == "📋 Меню")
 
