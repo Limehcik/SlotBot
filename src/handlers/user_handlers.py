@@ -64,6 +64,7 @@ async def cmd_start(message: types.Message):
 async def spin_slots(message: types.Message):
     user_id = str(message.from_user.id)
     user_data = get_user(user_id)
+    current_bet = user_data.get("current_bet", 10)
     
     if user_data.get("status") == "ban":
         await message.answer("❌ Вы забанены админом!")
@@ -74,13 +75,13 @@ async def spin_slots(message: types.Message):
         await message.answer(f"⏳ Подождите еще {rem:.1f} сек перед следующей прокруткой!")
         return
         
-    if user_data["balance"] < user_data.get("current_bet", 10):
+    if user_data["balance"] < current_bet:
         await message.answer("❌ Недостаточно баллов для прокрутки! Уменьшите ставку.")
         return
         
     # Списываем ставку
     update_user(user_id, {
-        "balance": user_data["balance"] - user_data.get("current_bet", 10),
+        "balance": user_data["balance"] - current_bet,
         "last_spin": time.time(),
         "total_spins": user_data.get("total_spins", 0) + 1
     })
@@ -121,9 +122,9 @@ async def spin_slots(message: types.Message):
                 await message.bot.send_message(ref_id, f"👥 Реферальный бонус! Вы получили {ref_bonus} баллов от игры вашего друга (@{user_data['username']})!")
             except Exception: pass
             
-        await message.answer(get_win_text(win_amount, get_user(user_id)["balance"]))
+        await message.answer(get_win_text(win_amount, get_user(user_id)["balance"]), reply_markup=create_slots_keyboard(current_bet, user_data['balance']))
     else:
-        await message.answer(f"😢 Вы ничего не выиграли.\n💎 Остаток баланса: {user_data['balance']} баллов.")
+        await message.answer(f"😢 Вы ничего не выиграли.\n💎 Остаток баланса: {user_data['balance']} баллов.", reply_markup=create_slots_keyboard(current_bet, user_data['balance']),)
 
 async def daily_bonus_handler(message: types.Message):
     user_id = str(message.from_user.id)
