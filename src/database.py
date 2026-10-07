@@ -21,6 +21,7 @@ def init_db():
             multiplier_cost INTEGER DEFAULT 1000,
             total_spins INTEGER DEFAULT 0,
             total_wins INTEGER DEFAULT 0,
+            current_bet INTEGER DEFAULT 10,
             status TEXT DEFAULT 'norm',
             referral_code TEXT,
             referred_by TEXT,

@@ -5,8 +5,8 @@ import time
 from datetime import date, datetime
 
 from database import get_user, update_user, find_user_by_referral_code
-from keyboards import create_reply_keyboard
-from utils import give_daily_bonus, can_spin, get_remaining_cooldown, calculate_win, get_win_text, calculate_referral_bonus
+from keyboards import create_reply_keyboard, create_slots_keyboard
+from utils import give_daily_bonus, can_spin, get_remaining_cooldown, calculate_multiplier, get_win_text, calculate_referral_bonus
 
 async def cmd_start(message: types.Message):
     user_id = str(message.from_user.id)
@@ -64,6 +64,7 @@ async def cmd_start(message: types.Message):
 async def spin_slots(message: types.Message):
     user_id = str(message.from_user.id)
     user_data = get_user(user_id)
+    current_bet = user_data.get("current_bet", 10)
     
     if user_data.get("status") == "ban":
         await message.answer("❌ Вы забанены админом!")
@@ -74,13 +75,13 @@ async def spin_slots(message: types.Message):
         await message.answer(f"⏳ Подождите еще {rem:.1f} сек перед следующей прокруткой!")
         return
         
-    if user_data["balance"] < 10:
-        await message.answer("❌ Недостаточно баллов для прокрутки! Нужно минимум 10 баллов.")
+    if user_data["balance"] < current_bet:
+        await message.answer("❌ Недостаточно баллов для прокрутки! Уменьшите ставку.")
         return
         
     # Списываем ставку
     update_user(user_id, {
-        "balance": user_data["balance"] - 10,
+        "balance": user_data["balance"] - current_bet,
         "last_spin": time.time(),
         "total_spins": user_data.get("total_spins", 0) + 1
     })
@@ -92,7 +93,15 @@ async def spin_slots(message: types.Message):
     
     # Свежие данные после списания
     user_data = get_user(user_id)
-    win_amount = calculate_win(dice_value, user_data.get("multiplier_level", 0))
+
+    combo_mult = calculate_multiplier(dice_value)
+    
+    # 2. Учитываем прокачку пользователя (level 1 = +10% к выигрышу и т.д.)
+    user_mult_level = user_data.get("multiplier_level", 0)
+    perk_mult = 1.0 + (user_mult_level * 0.1)
+
+    # 3. Итоговый выигрыш = ставка * комбинация * прокачка
+    win_amount = int(user_data.get("current_bet", 10) * combo_mult * perk_mult)
     
     user_updates = {}
     if win_amount > 0:
@@ -112,10 +121,10 @@ async def spin_slots(message: types.Message):
             try:
                 await message.bot.send_message(ref_id, f"👥 Реферальный бонус! Вы получили {ref_bonus} баллов от игры вашего друга (@{user_data['username']})!")
             except Exception: pass
-            
-        await message.answer(get_win_text(win_amount, get_user(user_id)["balance"]))
+
+        await message.answer(get_win_text(win_amount, user_updates["balance"]), reply_markup=create_slots_keyboard(current_bet, user_updates["balance"]))
     else:
-        await message.answer(f"😢 Вы ничего не выиграли.\n💎 Остаток баланса: {user_data['balance']} баллов.")
+        await message.answer(f"😢 Вы ничего не выиграли.\n💎 Остаток баланса: {user_data['balance']} баллов.", reply_markup=create_slots_keyboard(current_bet, user_data['balance']),)
 
 async def daily_bonus_handler(message: types.Message):
     user_id = str(message.from_user.id)
@@ -169,5 +178,55 @@ async def show_menu(message: types.Message):
         f"💎 Баланс: {user_data['balance']} баллов\n\n"
         f"⏱️ Кулдаун крутки: {cooldown:.2f} сек\n"
         f"📈 Множитель выигрыша: x{multiplier:.1f}",
+        reply_markup=create_reply_keyboard(),
+        parse_mode="Markdown"
+    )
+
+async def show_slots_menu(message: types.Message):
+    user_id = message.from_user.id
+    user_data = get_user(user_id)
+    current_bet = user_data.get("current_bet", 10)
+    balance = user_data.get("balance", 0)
+    
+    await message.answer(
+        f"🎰 **Режим игры в Слоты**\n\n"
+        f"💰 Ваш баланс: `{balance}` баллов\n"
+        f"🎯 Текущая ставка: `{current_bet}` баллов\n\n"
+        f"Регулируйте ставку кнопками ниже и крутите!",
+        reply_markup=create_slots_keyboard(current_bet, balance),
+        parse_mode="Markdown"
+    )
+
+async def process_bet_but(message: types.Message):
+    user_id = str(message.from_user.id)
+    user_data = get_user(user_id)
+    
+    balance = user_data.get("balance", 0)
+    current_bet = user_data.get("current_bet", 10)
+    text = message.text
+
+    # Логика изменения ставки
+    if text == "-50k": new_bet = current_bet - 50000
+    elif text == "-1k": new_bet = current_bet - 1000
+    elif text == "-100": new_bet = current_bet - 100
+    elif text == "+100": new_bet = current_bet + 100
+    elif text == "+1k": new_bet = current_bet + 1000
+    elif text == "+50k": new_bet = current_bet + 50000
+    elif text == "-1M": new_bet = current_bet - 1000000
+    elif text == "+1M": new_bet = current_bet + 1000000
+    elif text == "MIN(10)": new_bet = 10
+    elif text == f"1/2 ({balance // 2})": new_bet = max(10, balance // 2)
+    elif text == f"MAX({balance})": new_bet = max(10, balance)
+    else: new_bet = current_bet
+
+    # Ограничения (от 10 до текущего баланса)
+    new_bet = max(10, min(new_bet, balance if balance >= 10 else 10))
+
+    update_user(user_id, {"current_bet": new_bet})
+
+    # Переотправляем клавиатуру с обновленной суммой на кнопке "Крутить"
+    await message.answer(
+        f"Ваша ставка изменена на: **{new_bet:,}** баллов.",
+        reply_markup=create_slots_keyboard(new_bet, balance),
         parse_mode="Markdown"
     )
